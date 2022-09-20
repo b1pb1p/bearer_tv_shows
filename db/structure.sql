@@ -406,29 +406,29 @@ CREATE INDEX index_users_on_team_id ON public.users USING btree (team_id);
 -- Name: latest_reviews _RETURN; Type: RULE; Schema: public; Owner: -
 --
 
-CREATE OR REPLACE VIEW public.latest_reviews AS
- SELECT rev.id,
-    rev.tv_show_id,
-    rev.description,
-    rev.title,
-    rev.status,
-    rev.scheduled_date,
-    rev.votes,
-    rev.revenue,
-    usr.name AS user_name,
-    usr.email AS user_email,
-    tms.name AS team_name,
-    gps.name AS group_name,
-    (rev.revenue / rev.votes) AS revenue_per_vote,
-    concat(gps.id, '-', rev.id) AS uid
-   FROM ((((public.reviews rev
-     JOIN public.users usr ON ((usr.id = rev.user_id)))
-     JOIN public.teams tms ON ((tms.id = usr.team_id)))
-     JOIN public.groups gps ON ((gps.id = tms.group_id)))
-     JOIN public.review_types rev_tp ON ((rev_tp.id = rev.review_type_id)))
-  WHERE ((usr.status = 0) AND (tms.status = ANY (ARRAY[0, 1])) AND (rev.status = ANY (ARRAY[0, 1])) AND (rev.scheduled_date <= now()))
-  GROUP BY rev.id, usr.name, usr.email, tms.name, gps.name, gps.created_at, gps.id
-  ORDER BY rev.created_at, gps.created_at;
+CREATE OR REPLACE VIEW s3_export_data.latest_reviews AS
+ SELECT reviews.id,
+    reviews.tv_show_id,
+    reviews.description,
+    reviews.title,
+    reviews.status,
+    reviews.scheduled_date,
+    reviews.votes,
+    reviews.revenue,
+    users.name AS user_name,
+    users.email AS user_email,
+    teams.name AS team_name,
+    groups.name AS group_name,
+    (reviews.revenue / reviews.votes) AS revenue_per_vote,
+    concat(groups.id, '-', reviews.id) AS uid
+   FROM ((((public.reviews
+     JOIN public.users ON ((users.id = reviews.user_id)))
+     JOIN public.teams ON ((teams.id = users.team_id)))
+     JOIN public.groups ON ((groups.id = teams.group_id)))
+     JOIN public.review_types ON ((review_types.id = reviews.review_type_id)))
+  WHERE ((users.status = 0) AND (teams.status = ANY (ARRAY[0, 1])) AND (reviews.status = ANY (ARRAY[0, 1])) AND (reviews.scheduled_date <= now()))
+  GROUP BY reviews.id, users.name, users.email, teams.name, groups.name, groups.created_at, groups.id
+  ORDER BY reviews.created_at, groups.created_at;
 
 
 --
